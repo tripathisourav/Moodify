@@ -1,0 +1,52 @@
+.sidebar {
+    background: #000;
+    padding: 25px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    height: 100%;
+    border-right: 1px solid #1f1f1f;
+}
+
+/* Logo */
+.logo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Nav */
+nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Item */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #b3b3b3;
+    transition: all 0.2s ease;
+}
+
+/* Hover */
+.nav-item:hover {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+/* Icon */
+.nav-item span {
+    font-size: 18px;
+}
+
+/* Text */
+.nav-item p {
+    font-size: 14px;
+    font-weight: 500;
+}

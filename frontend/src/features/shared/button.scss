@@ -1,0 +1,23 @@
+.button {
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    background-color: #0876e4;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+
+    .primary-button {
+        background-color: #0876e4;
+
+        color: whitesmoke;
+    }
+
+    &:hover {
+        background-color: #0659a4;
+    }
+
+    &:active{
+        transform: scale(0.95);
+    }
+}
