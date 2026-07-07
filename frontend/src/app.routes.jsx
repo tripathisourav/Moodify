@@ -3,15 +3,18 @@ import Login from "./features/auth/pages/Login";
 import Register from "./features/auth/pages/Register";
 import Home from "./features/home/pages/Home";
 import Protected from "./features/auth/components/Protected";
+import Moodify from "./features/home/pages/Moodify";
 
 
 const router = createBrowserRouter([
     {
         path: "/",
         element: (
-            <Protected>
-                <Home />
-            </Protected>
+            // <Moodify/>
+            // <Protected>
+            //     <Home />
+            // </Protected>
+            <Home/>
         )
     },
     {

@@ -1,342 +1,121 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React from 'react'
 import { useSong } from '../hooks/useSongs'
-import './player.scss'
-
-const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2]
-
-const formatTime = (seconds) => {
-    if (isNaN(seconds)) return '0:00'
-    const m = Math.floor(seconds / 60)
-    const s = Math.floor(seconds % 60).toString().padStart(2, '0')
-    return `${m}:${s}`
-}
+import CtrlBtn from './CtrlBtn'
+import Icon from './Icon'
 
 
-const Player = ({ song }) => {
+
+const Player = () => {
+
     const {
-        songs,
-        currentIndex,
-        playSong,
-        isShuffle,
-        setIsShuffle,
-        isLoop,
-        setIsLoop,
-        likedSongs,
-        toggleLike
+        I,
+        mood,
+        setMood,
+        MOODS,
+        m,
+        Hov,
+        setHov,
+        currentSong,
+        setCurrentSong,
+        playing, setPlaying, WH, pct, setPct
     } = useSong()
 
-    const audioRef = useRef(null)
-    const progressRef = useRef(null)
+    const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+    const TOTAL = 226;
 
-    const [isPlaying, setIsPlaying] = useState(false)
-    const [currentTime, setCurrentTime] = useState(0)
-    const [duration, setDuration] = useState(0)
-    const [speed, setSpeed] = useState(1)
-    const [volume, setVolume] = useState(0.85)
-    const [showSpeed, setShowSpeed] = useState(false)
-    const [isMuted, setIsMuted] = useState(false)
-
-    const isFavorite = likedSongs.find(s => s._id === song?._id)
-
-    useEffect(() => {
-        if (!audioRef.current) return
-        audioRef.current.volume = isMuted ? 0 : volume
-        audioRef.current.playbackRate = speed
-    }, [volume, speed, isMuted])
-
-    useEffect(() => {
-        if (!audioRef.current || !song?.url) return
-
-        audioRef.current.load()
-        audioRef.current.play()
-
-        setIsPlaying(true)
-        setCurrentTime(0)
-        setDuration(0)
-    }, [song?.url])
-
-
-
-    const togglePlay = () => {
-        const audio = audioRef.current
-        if (!audio) return
-        if (isPlaying) {
-            audio.pause()
-        } else {
-            audio.play()
-        }
-        setIsPlaying((prev) => !prev)
-    }
-
-    const skip = (seconds) => {
-        const audio = audioRef.current
-        if (!audio) return
-        audio.currentTime = Math.min(
-            Math.max(audio.currentTime + seconds, 0),
-            duration
-        )
-    }
-
-    const handleTimeUpdate = () => {
-        if (!audioRef.current) return
-        setCurrentTime(audioRef.current.currentTime)
-    }
-
-    const handleLoadedMetadata = () => {
-        if (!audioRef.current) return
-        setDuration(audioRef.current.duration)
-    }
-
-    const handleProgressClick = (event) => {
-        const bar = progressRef.current
-        if (!bar || !audioRef.current || !duration) return
-        const rect = bar.getBoundingClientRect()
-        const ratio = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1)
-        const newTime = ratio * duration
-        audioRef.current.currentTime = newTime
-        setCurrentTime(newTime)
-    }
-
-    const handleSpeedChange = (value) => {
-        setSpeed(value)
-        if (audioRef.current) audioRef.current.playbackRate = value
-        setShowSpeed(false)
-    }
-
-    const handleVolume = (event) => {
-        const val = parseFloat(event.target.value)
-        setVolume(val)
-        setIsMuted(val === 0)
-        if (audioRef.current) audioRef.current.volume = val
-    }
-
-    const toggleMute = () => {
-        setIsMuted((prev) => {
-            const nextMuted = !prev
-            if (audioRef.current) {
-                audioRef.current.volume = nextMuted ? 0 : volume || 0.5
-            }
-            return nextMuted
-        })
-    }
-
-    const handleSongEnd = () => {
-
-        if (isLoop) {
-            audioRef.current.currentTime = 0
-            audioRef.current.play()
-            return
-        }
-
-        if (isShuffle) {
-            const randomIndex = Math.floor(Math.random() * songs.length)
-            playSong(songs[randomIndex], randomIndex)
-            return
-        }
-
-        if (currentIndex < songs.length - 1) {
-            playSong(songs[currentIndex + 1], currentIndex + 1)
-        }
-    }
-
-    const toggleShuffle = () => {
-        setIsShuffle((prev) => !prev)
-    }
-
-
-    const progress = duration ? (currentTime / duration) * 100 : 0
-    const canGoPrevious = currentIndex > 0
-    const canGoNext = currentIndex < songs.length - 1
-
-    if (!song) return null
 
     return (
-        <div className="player">
-            <audio
-                ref={audioRef}
-                src={song.url}
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={handleLoadedMetadata}
-                onEnded={handleSongEnd}
-            />
+        <div style={{
+            borderTop: "1px solid rgba(255,255,255,.07)",
+            padding: "10px 24px",
+            display: "flex", alignItems: "center", gap: 16,
+            flexShrink: 0,
+            background: "rgba(0,0,0,.5)",
+            backdropFilter: "blur(16px)",
+        }}>
 
-
-            <div className="player__top">
-
-                {/* LEFT SIDE */}
-                <div className="player__info">
-
-                    {/* Poster */}
-                    <div className="player__poster-wrap">
-                        <img
-                            className="player__poster"
-                            src={song.posterUrl}
-                            alt={song.title}
-                        />
-                    </div>
-
-                    {/* Song Info */}
-                    <div className="player__meta">
-                        <p className="player__label">Now playing</p>
-                        <h2 className="player__title">{song.title}</h2>
-                        <p className="player__artist">
-                            {song.artist || song.mood || 'Unknown Artist'}
-                        </p>
-
-                        {/* Actions */}
-                        <div className="player__actions">
-                            <button onClick={() => toggleLike(song)}>
-                                {isFavorite ? '♥ Liked' : '♡ Favorite'}
-                            </button>
-
-                            <span>{song.album || 'Single'}</span>
-                        </div>
-                    </div>
+            {/* Track info */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, width: 190, flexShrink: 0 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
+                    {/* {currentSong.posterUrl} */}
                 </div>
-
-                {/* RIGHT SIDE */}
-                <div className="player__modes">
-                    <button
-                        className={`control-btn ${isShuffle ? "active" : ""}`}
-                        onClick={toggleShuffle}
-                    >
-                        🔀
-                    </button>
-
-                    <button
-                        className={`control-btn ${isLoop ? "active" : ""}`}
-                        onClick={() => setIsLoop(!isLoop)}
-                    >
-                        🔁
-                    </button>
-                </div>
-
-            </div>
-
-            <div
-                className="player__progress-wrap"
-
-            >
-                <div className="player__time">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(duration)}</span>
-                </div>
-                <div
-                    className="player__progress"
-                    ref={progressRef}
-                    onClick={handleProgressClick}
-
-                >
-                    <div
-                        className="player__progress-fill"
-                        style={{ width: `${progress}%` }}
-                    />
-
-                    <div
-                        className="player__progress-thumb"
-                        style={{ left: `${progress}%` }}
-                    />
+                <div style={{ overflow: "hidden" }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>
+                        {/* {currentSong.title} */}
+                    </p>
+                    <p style={{ fontSize: 11, color: "rgba(255,255,255,.38)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {/* {currentSong.artist} - {currentSong.album}  */}
+                    </p>
                 </div>
             </div>
 
-
-            <div className="waveform">
-                {[...Array(20)].map((_, i) => (
-                    <span key={i}></span>
+            {/* Animated waveform */}
+            <div style={{ display: "flex", alignItems: "flex-end", gap: "2px", height: 30, flexShrink: 0 }}>
+                {WH.map((h, i) => (
+                    <div key={i} className={playing ? "wb" : ""} style={{
+                        width: 2, borderRadius: 1, background: m.c, height: `${h}%`,
+                        animationDuration: `${0.5 + (i % 7) * 0.07}s`,
+                        animationDelay: `${(i % 5) * 0.06}s`,
+                        opacity: playing ? 1 : 0.3,
+                        transition: "opacity .3s",
+                    }} />
                 ))}
             </div>
 
-            <div className="player__controls">
+            {/* Playback controls */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                <CtrlBtn d={I.prev} />
+                <CtrlBtn d={I.replay} />
+                <button onClick={() => setPlaying(!playing)} style={{
+                    width: 40, height: 40, borderRadius: "50%", border: "none",
+                    background: m.c, display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "transform .18s", flexShrink: 0,
+                }}
+                    onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
+                    onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+                    <Icon d={playing ? I.pause : I.play} sz={18} fill={m.dark ? "#111" : "#fff"} />
+                </button>
+                <CtrlBtn d={I.forward} />
+                <CtrlBtn d={I.next} />
+            </div>
 
-                {/* LEFT CONTROLS */}
-                <div className="player__controls-left">
-
-                    <button
-                        className="control-btn"
-                        disabled={!canGoPrevious}
-                        onClick={() => {
-                            if (!canGoPrevious) return;
-                            playSong(songs[currentIndex - 1], currentIndex - 1);
-                        }}
-                    >
-                        ⏮
-                    </button>
-
-                    <button
-                        className="control-btn"
-                        onClick={() => skip(-10)}
-                    >
-                        « 10s
-                    </button>
-
-                    <button className="control-btn control-btn--play" onClick={togglePlay}>
-                        {isPlaying ? '❚❚' : '▶'}
-                    </button>
-
-                    <button
-                        className="control-btn"
-                        onClick={() => skip(10)}
-                    >
-                        10s »
-                    </button>
-
-                    <button
-                        className="control-btn"
-                        disabled={!canGoNext}
-                        onClick={() => {
-                            if (!canGoNext) return;
-                            playSong(songs[currentIndex + 1], currentIndex + 1);
-                        }}
-                    >
-                        ⏭
-                    </button>
-
-                </div>
-
-                {/* RIGHT CONTROLS */}
-                <div className="player__controls-right">
-
-                    {/* Volume */}
-                    <div className="player__volume">
-                        <button onClick={toggleMute}>
-                            {isMuted || volume === 0 ? '🔇' : '🔊'}
-                        </button>
-
-                        <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.01"
-                            value={isMuted ? 0 : volume}
-                            onChange={handleVolume}
-                        />
+            {/* Progress bar */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,.4)", width: 28, flexShrink: 0 }}>{fmt(pct / 100 * TOTAL)}</span>
+                <div
+                    style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(255,255,255,.1)", cursor: "pointer", position: "relative" }}
+                    onClick={e => {
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setPct(Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100)));
+                    }}>
+                    <div style={{ position: "absolute", top: 0, left: 0, height: "100%", borderRadius: 2, background: m.c, width: `${pct}%` }}>
+                        <div style={{ position: "absolute", right: -5, top: "50%", transform: "translateY(-50%)", width: 12, height: 12, borderRadius: "50%", background: "#fff", boxShadow: `0 0 6px ${m.c}` }} />
                     </div>
-
-                    {/* Speed */}
-                    <div className="player__speed">
-                        <button onClick={() => setShowSpeed(prev => !prev)}>
-                            {speed}×
-                        </button>
-
-                        {showSpeed && (
-                            <div className="player__speed-menu">
-                                {SPEED_OPTIONS.map((s) => (
-                                    <button key={s} onClick={() => handleSpeedChange(s)}>
-                                        {s}×
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
                 </div>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,.4)", width: 28, textAlign: "right", flexShrink: 0 }}>3:46</span>
+            </div>
 
+            {/* Volume + like */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                <Icon d={I.vol} sz={16} fill="rgba(255,255,255,.38)" />
+                <div style={{ width: 56, height: 3, borderRadius: 2, background: "rgba(255,255,255,.1)" }}>
+                    <div style={{ height: "100%", width: "65%", borderRadius: 2, background: "rgba(255,255,255,.45)" }} />
+                </div>
+                <Icon d={I.heart} sz={16} fill="rgba(255,255,255,.25)" />
             </div>
         </div>
     )
 }
 
-
-
-
 export default Player
+
+
+
+// {
+//     "_id": "69cfc27c1d2a93256459b97c",
+//         "url": "https://ik.imagekit.io/yotm0kiwn/cohort-2/moodify/songs/Destiny_Mann_Atkeya_-_PagalNew_mZM0BMNlp.mp3",
+//             "posterUrl": "https://ik.imagekit.io/yotm0kiwn/cohort-2/moodify/posters/Destiny_Mann_Atkeya_-_PagalNew_qmOMW6El8.jpeg",
+//                 "title": "Destiny Mann Atkeya - PagalNew",
+//                     "mood": "sad",
+//                         "__v": 0
+// },

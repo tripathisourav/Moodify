@@ -5,24 +5,28 @@ import { songContext } from "../song.context";
 export const useSong = () => {
     const context = useContext(songContext);
 
-    const {
-        songs,
-        setSongs,
-        currentSong,
-        currentIndex,
-        loading,
-        setLoading,
 
-        // 🔥 NEW FROM CONTEXT
-        playSong,
-        likedSongs,
-        toggleLike,
-        recentSongs,
-        isShuffle,
-        setIsShuffle,
-        isLoop,
-        setIsLoop
-    } = context;
+    const {
+            mood,
+            setMood,
+            songs,
+            setSongs,
+            MOODS,
+            m,
+            loading, 
+            setLoading,
+            currentSong,
+            setCurrentSong,
+            currentIndex, 
+            setCurrentIndex,
+            playing, 
+            setPlaying,
+            pct,
+            setPct,
+            I,
+            WH
+
+    } = context
 
     // 🎯 Fetch songs by mood
     async function handleGetSong({ mood }) {
@@ -31,36 +35,46 @@ export const useSong = () => {
         try {
             const data = await getSong({ mood });
 
-            setSongs(data.songs);
+            const fetchedSongs = data?.songs ?? [];
 
-            // ✅ ALWAYS USE playSong (not setters)
-            if (data.songs.length > 0) {
-                playSong(data.songs[0], 0);
-            }
+            setSongs(fetchedSongs);
+            return fetchedSongs;
+
+
 
         } catch (err) {
             console.error(err);
+            return [];
         } finally {
             setLoading(false);
         }
     }
+   
+
+    const cols = Math.min(4, songs.length);
 
     return {
-        // state
-        songs,
-        currentSong,
-        currentIndex,
-        loading,
-        likedSongs,
-        recentSongs,
-        isShuffle,
-        isLoop,
-
-        // actions
         handleGetSong,
-        playSong,
-        toggleLike,
-        setIsShuffle,
-        setIsLoop
+        I,
+        mood,
+        setMood,
+        songs,
+        setSongs,
+        MOODS,
+        m,
+        loading,
+        setLoading,
+        currentSong,
+        setCurrentSong,
+        currentIndex,
+        setCurrentIndex,
+        playing,
+        setPlaying,
+        pct,
+        setPct,
+        cols,
+        WH
     };
 };
+
+

@@ -3,19 +3,20 @@ const id3 = require('node-id3')
 const storageService = require('../sevices/storage.services.js')
 
 async function uploadSong(req, res) {
-    // console.log(req.file, req.file.buffer);
+    console.log(req.file , '    ------');
+    console.log(req.file.buffer  , '   ------');
     
     const songBuffer = req.file.buffer
     const tags = id3.read(songBuffer)
     
-    // console.log(tags);
+    console.log(tags , '  ------');
     
     const { mood } = req.body
 
 
     const posterBuffer = tags.image?.imageBuffer
 
-    // console.log(posterBuffer);
+    console.log(posterBuffer , '  ------');
     
 
     if (!posterBuffer) {
@@ -42,7 +43,9 @@ async function uploadSong(req, res) {
         url: songFile.url,
         posterUrl: posterFile.url,
         title: tags.title,
-        mood: mood
+        mood: mood,
+        artist: tags.artist,
+        album: tags.album
     })
 
     return res.status(201).json({
@@ -53,6 +56,7 @@ async function uploadSong(req, res) {
 }
 
 async function getSong(req, res) {
+    console.log(req.query)
 
     const { mood } = req.query
 
