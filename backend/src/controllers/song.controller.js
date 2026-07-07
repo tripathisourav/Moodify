@@ -3,21 +3,21 @@ const id3 = require('node-id3')
 const storageService = require('../sevices/storage.services.js')
 
 async function uploadSong(req, res) {
-    console.log(req.file , '    ------');
-    console.log(req.file.buffer  , '   ------');
-    
+    console.log(req.file, '    ------');
+    console.log(req.file.buffer, '   ------');
+
     const songBuffer = req.file.buffer
     const tags = id3.read(songBuffer)
-    
-    console.log(tags , '  ------');
-    
+
+    console.log(tags, '  ------');
+
     const { mood } = req.body
 
 
     const posterBuffer = tags.image?.imageBuffer
 
-    console.log(posterBuffer , '  ------');
-    
+    console.log(posterBuffer, '  ------');
+
 
     if (!posterBuffer) {
         return res.status(400).json({
@@ -45,7 +45,8 @@ async function uploadSong(req, res) {
         title: tags.title,
         mood: mood,
         artist: tags.artist,
-        album: tags.album
+        album: tags.album,
+        like: "disliked"
     })
 
     return res.status(201).json({
@@ -54,6 +55,42 @@ async function uploadSong(req, res) {
     })
 
 }
+
+
+// Toggle like status
+async function toggleLike(req, res){
+    try {
+        const { id } = req.params;
+
+        const song = await SongModel.findById(id);
+        if (!song) {
+            return res.status(404).json({ success: false, message: 'Song not found' });
+        }
+
+        // Toggle like status
+        song.like = song.like === "liked" ? "disliked" : "liked";
+        await song.save();
+
+        res.status(200).json({
+            success: true,
+            song,
+            message: `Song ${song.like === 'liked' ? 'liked' : 'disliked'} successfully`
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+// Get liked songs
+async function getLikedSongs(req, res){
+    try {
+        const songs = await SongModel.find({ like: "liked" });
+        res.status(200).json({ success: true, songs });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 
 async function getSong(req, res) {
     console.log(req.query)
@@ -79,11 +116,8 @@ async function getSong(req, res) {
 }
 
 module.exports = {
-    uploadSong, getSong
+    uploadSong, getSong, toggleLike, getLikedSongs
 }
-
-
-
 
 
 

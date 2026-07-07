@@ -28,6 +28,17 @@ const songSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    like: {
+        type: String,
+        required: true,
+        enum: {
+            values: ["liked", "disliked"],
+            message: 'Like must be either liked or disliked'
+        },
+        default: "disliked"
+    }
+}, {
+    timestamps: true
 })
 
 

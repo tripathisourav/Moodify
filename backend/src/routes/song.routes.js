@@ -7,6 +7,8 @@ const router = express.Router()
 
 router.post('/', upload.single('song'), songController.uploadSong)
 router.get('/', songController.getSong)
+router.get('/liked', songController.getLikedSongs);
+router.patch('/:id/like', songController.toggleLike);
 
 
 
