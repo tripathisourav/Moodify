@@ -111,6 +111,7 @@ const Tracks = () => {
         playing,
         toggleTrackPlay,  // NEW: replaces pickTrack
         isLiked,
+        deleteSong,
         I
     } = useSong()
 
@@ -124,10 +125,10 @@ const Tracks = () => {
                         color: m.c, background: `${m.c}18`, border: `1px solid ${m.c}38`,
                     }}>{m.badge}</span>
                 </div>
-                <div style={{ 
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "center", 
+                <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     height: 300,
                     color: "rgba(255,255,255,.3)",
                     fontSize: 14
@@ -150,27 +151,45 @@ const Tracks = () => {
             </div>
 
             {/* Cards grid */}
-            <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16 }}>
                 {songs.map((s, i) => {
                     const active = currentIndex === i;
                     const isHov = Hov === i;
                     const liked = isLiked(s);
                     const isPlayingThis = active && playing;
                     const posterUrl = s.posterUrl || s.cover || s.image || s.thumbnail;
-                    
+
+                    // compute a compact artist label (first artist + ... if multiple)
+                    const displayArtist = (() => {
+                        const a = s.artist || s.artists || s.album || "";
+                        if (!a) return "Unknown Artist";
+                        const hasMultiple = /,|&|\band\b/i.test(a);
+                        const first = a.split(/,|&|\band\b/i)[0].trim();
+                        return first + (hasMultiple ? '...' : '');
+                    })();
+
                     return (
                         <div key={s._id || s.id || i}
                             onClick={() => toggleTrackPlay(i)}  // Play/Pause toggle
                             onMouseEnter={() => setHov(i)}
                             onMouseLeave={() => setHov(null)}
-                            style={{
-                                position: "relative", borderRadius: 14, padding: "16px 14px 14px",
-                                cursor: "pointer", userSelect: "none",
+                                style={{
+                                position: "relative",
+                                borderRadius: 14,
+                                    padding: "12px",
+                                cursor: "pointer",
+                                userSelect: "none",
                                 background: active ? `${m.c}16` : "rgba(255,255,255,.04)",
                                 border: active ? `2px solid ${m.c}` : "1px solid rgba(255,255,255,.08)",
                                 boxShadow: active ? `0 0 28px ${m.c}28` : "none",
                                 transform: isHov ? "scale(1.03)" : "scale(1)",
                                 transition: "all .18s ease",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    height: 420,
+                                    minHeight: 420,
+                                    maxHeight: 420,
+                                    overflow: 'hidden'
                             }}>
 
                             {/* Active dot / Track number */}
@@ -181,45 +200,56 @@ const Tracks = () => {
                                 </span>
                             }
 
+                            {/* Delete button on hover - top right */}
+                            {isHov && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteSong(s._id || s.id);
+                                    }}
+                                    style={{
+                                        position: "absolute",
+                                        bottom: 22,
+                                        right: 10,
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: "50%",
+                                        background: "rgba(255,255,255,.1)",
+                                        border: "1px solid rgba(255,255,255,.2)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        cursor: "pointer",
+                                        transition: "all .15s",
+                                        zIndex: 10,
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = "rgba(255,255,255,.15)";
+                                        e.currentTarget.style.border = "1px solid rgba(255,255,255,.3)";
+                                        e.currentTarget.style.transform = "scale(1.1)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = "rgba(255,255,255,.1)";
+                                        e.currentTarget.style.border = "1px solid rgba(255,255,255,.2)";
+                                        e.currentTarget.style.transform = "scale(1)";
+                                    }}
+                                    title="Delete song"
+                                >
+                                    <Icon d={I.trashOutline} sz={14} fill="rgba(255,255,255,.5)" />
+                                </button>
+                            )}
+
                             {/* Thumbnail with heart badge */}
-                            <div style={{ 
-                                height: 72, 
-                                display: "flex", 
-                                alignItems: "center", 
-                                justifyContent: "center", 
-                                fontSize: 34, 
-                                marginBottom: 12,
-                                position: "relative"
-                            }}>
+                            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34, marginBottom: 8, minHeight: 0 }}>
                                 {posterUrl ? (
-                                    <img 
-                                        style={{ height: 50, width: 50, borderRadius: 5, objectFit: "cover" }}
+                                    <img
+                                        style={{ height: "100%", width: "100%", borderRadius: 10, objectFit: "cover", display: 'block' }}
                                         src={posterUrl}
                                         alt={s.title}
                                         onError={(e) => { e.target.style.display = 'none'; }}
                                     />
                                 ) : (
-                                    <span>🎵</span>
-                                )}
-                                
-                                {/* ❤️ Heart badge - only on liked songs (NOT hover) */}
-                                {liked && (
-                                    <div style={{
-                                        position: "absolute",
-                                        bottom: 8,
-                                        right: "calc(50% - 25px + 2px)",
-                                        width: 18,
-                                        height: 18,
-                                        borderRadius: "50%",
-                                        background: "#ef4444",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        boxShadow: "0 2px 8px rgba(239,68,68,.4)",
-                                        zIndex: 3,
-                                    }}>
-                                        <Icon d={I.heart} sz={10} fill="#fff" />
-                                    </div>
+                                    <div style={{ fontSize: 40 }}>🎵</div>
                                 )}
                             </div>
 
@@ -230,35 +260,36 @@ const Tracks = () => {
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 opacity: isHov ? 1 : 0, transition: "opacity .15s",
                             }}>
-                                <div style={{ 
-                                    width: 42, height: 42, borderRadius: "50%", 
-                                    background: m.c, display: "flex", 
-                                    alignItems: "center", justifyContent: "center" 
+                                <div style={{
+                                    width: 42, height: 42, borderRadius: "50%",
+                                    background: m.c, display: "flex",
+                                    alignItems: "center", justifyContent: "center"
                                 }}>
-                                    <Icon 
-                                        d={isPlayingThis ? I.pause : I.play} 
-                                        sz={20} 
-                                        fill={m.dark ? "#111" : "#fff"} 
+                                    <Icon
+                                        d={isPlayingThis ? I.pause : I.play}
+                                        sz={20}
+                                        fill={m.dark ? "#111" : "#fff"}
                                     />
                                 </div>
                             </div>
 
                             {/* Track info */}
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                <div style={{ overflow: "hidden", flex: 1 }}>
-                                    <p style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>
+                            <div style={{ display: "flex", flexDirection: 'column', gap: 6, paddingTop: 8 }}>
+                                <div style={{ overflow: "hidden", flex: 1, minHeight: 0 }}>
+                                    <p style={{ fontSize: 14, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0, lineHeight: 1.2 }}>
                                         {s.title || "Unknown Title"}
                                     </p>
-                                    <p style={{ fontSize: 11, color: "rgba(255,255,255,.38)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                        {s.artist || "Unknown Artist"} {s.album ? `• ${s.album}` : ""}
+                                    <p style={{ fontSize: 12, color: "rgba(255,255,255,.38)", marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2 }}>
+                                        {displayArtist}
                                     </p>
                                 </div>
-                                {/* Small heart indicator next to title */}
-                                {liked && (
-                                    <div style={{ marginLeft: 6, flexShrink: 0 }}>
-                                        <Icon d={I.heart} sz={12} fill="#ef4444" />
-                                    </div>
-                                )}
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                                    {liked && (
+                                        <div style={{ marginLeft: 4, flexShrink: 0 }}>
+                                            <Icon d={I.heart} sz={12} fill="#ef4444" />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     );

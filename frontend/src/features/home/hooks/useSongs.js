@@ -77,7 +77,7 @@
 //     };
 // };
 
-import { getSong, toggleLikeSong } from "../services/song.api";
+import { getSong, toggleLikeSong, deleteSong as deleteSongAPI } from "../services/song.api";
 import { useContext } from "react";
 import { songContext } from "../song.context";
 
@@ -170,13 +170,43 @@ export const useSong = () => {
     function playNext() {
         if (songs.length === 0) return;
         const nextIndex = (currentIndex + 1) % songs.length;
-        pickTrack(nextIndex);
+        // Preserve current playing state: only auto-play if already playing
+        if (!songs[nextIndex]) return;
+        setCurrentIndex(nextIndex);
+        setCurrentSong(songs[nextIndex]);
+        const audioUrl = songs[nextIndex]?.url || songs[nextIndex]?.audioUrl || songs[nextIndex]?.src;
+        if (audioRef.current && audioUrl) {
+            audioRef.current.src = audioUrl;
+            audioRef.current.volume = volume;
+            if (playing) {
+                audioRef.current.play().catch(err => console.log("Playback error:", err));
+                setPlaying(true);
+            } else {
+                // remain paused
+                setPlaying(false);
+            }
+        }
     }
 
     function playPrev() {
         if (songs.length === 0) return;
         const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-        pickTrack(prevIndex);
+        // Preserve current playing state: only auto-play if already playing
+        if (!songs[prevIndex]) return;
+        setCurrentIndex(prevIndex);
+        setCurrentSong(songs[prevIndex]);
+        const audioUrl = songs[prevIndex]?.url || songs[prevIndex]?.audioUrl || songs[prevIndex]?.src;
+        if (audioRef.current && audioUrl) {
+            audioRef.current.src = audioUrl;
+            audioRef.current.volume = volume;
+            if (playing) {
+                audioRef.current.play().catch(err => console.log("Playback error:", err));
+                setPlaying(true);
+            } else {
+                // remain paused
+                setPlaying(false);
+            }
+        }
     }
 
     function seekTo(percentage) {
@@ -218,6 +248,42 @@ export const useSong = () => {
         }
     }
 
+    // 🎯 Delete song from database
+    async function deleteSong(songId) {
+        try {
+            const data = await deleteSongAPI(songId);
+            if (data.success) {
+                // Remove from songs list
+                const updatedSongs = songs.filter(song => 
+                    song._id !== songId && song.id !== songId
+                );
+                setSongs(updatedSongs);
+
+                // If deleted song was playing, move to next track
+                if (currentSong && (currentSong._id === songId || currentSong.id === songId)) {
+                    if (updatedSongs.length > 0) {
+                        const nextIndex = Math.min(currentIndex, updatedSongs.length - 1);
+                        setCurrentIndex(nextIndex);
+                        setCurrentSong(updatedSongs[nextIndex]);
+                        const audioUrl = updatedSongs[nextIndex]?.url || updatedSongs[nextIndex]?.audioUrl;
+                        if (audioRef.current && audioUrl) {
+                            audioRef.current.src = audioUrl;
+                            audioRef.current.play().catch(err => console.log("Playback error:", err));
+                        }
+                    } else {
+                        setCurrentSong(null);
+                        setCurrentIndex(0);
+                        setPlaying(false);
+                    }
+                }
+            }
+            return data;
+        } catch (err) {
+            console.error("Delete failed:", err);
+            return null;
+        }
+    }
+
     // 🎯 Check if song is liked (from backend data)
     function isLiked(song) {
         if (!song) return false;
@@ -236,6 +302,7 @@ export const useSong = () => {
         seekTo,
         setVol,
         toggleLike,
+        deleteSong,
         isLiked,
         I,
         mood, setMood,

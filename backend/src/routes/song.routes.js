@@ -9,8 +9,6 @@ router.post('/', upload.single('song'), songController.uploadSong)
 router.get('/', songController.getSong)
 router.get('/liked', songController.getLikedSongs);
 router.patch('/:id/like', songController.toggleLike);
-
-
-
+router.delete('/:id', songController.deleteSong);
 
 module.exports = router

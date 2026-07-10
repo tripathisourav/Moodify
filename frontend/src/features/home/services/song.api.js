@@ -10,6 +10,15 @@ export async function getSong({ mood }) {
     return res.data
 }
 
+export async function uploadSong(formData) {
+    const res = await api.post('/', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
+    return res.data
+}
+
 export async function toggleLikeSong(id) {
     const res = await api.patch(`/${id}/like`)
     return res.data
@@ -17,5 +26,10 @@ export async function toggleLikeSong(id) {
 
 export async function getLikedSongs() {
     const res = await api.get('/liked')
+    return res.data
+}
+
+export async function deleteSong(id) {
+    const res = await api.delete(`/${id}`)
     return res.data
 }

@@ -3,7 +3,7 @@ const id3 = require('node-id3')
 const storageService = require('../sevices/storage.services.js')
 
 async function uploadSong(req, res) {
-    console.log(req.file, '    ------');
+    // console.log(req.file, '    ------');
     console.log(req.file.buffer, '   ------');
 
     const songBuffer = req.file.buffer
@@ -16,7 +16,7 @@ async function uploadSong(req, res) {
 
     const posterBuffer = tags.image?.imageBuffer
 
-    console.log(posterBuffer, '  ------');
+    // console.log(posterBuffer, '  ------');
 
 
     if (!posterBuffer) {
@@ -62,7 +62,7 @@ async function toggleLike(req, res){
     try {
         const { id } = req.params;
 
-        const song = await SongModel.findById(id);
+        const song = await songModel.findById(id);
         if (!song) {
             return res.status(404).json({ success: false, message: 'Song not found' });
         }
@@ -85,26 +85,30 @@ async function toggleLike(req, res){
 // Get liked songs
 async function getLikedSongs(req, res){
     try {
-        const songs = await SongModel.find({ like: "liked" });
+        const songs = await songModel.find({ like: "liked" });
         res.status(200).json({ success: true, songs });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
+
+
 async function getSong(req, res) {
     console.log(req.query)
 
     const { mood } = req.query
 
-    if (!mood) {
-        return res.status(400).json({
-            message: "Mood is required"
-        })
-    }
-
     try {
-        const songs = await songModel.find({ mood }).sort({ _id: -1 }).limit(10)
+        let songs;
+        
+        // If mood is "neutral" or not provided, fetch all songs
+        if (!mood || mood === "neutral" || mood === "all") {
+            songs = await songModel.find({}).sort({ _id: -1 }).limit(50)
+        } else {
+            // Otherwise fetch songs by specific mood
+            songs = await songModel.find({ mood }).sort({ _id: -1 }).limit(10)
+        }
 
         res.status(200).json({
             message: "song fetched successfully.",
@@ -115,8 +119,28 @@ async function getSong(req, res) {
     }
 }
 
+// Delete song
+async function deleteSong(req, res) {
+    try {
+        const { id } = req.params;
+
+        const song = await songModel.findByIdAndDelete(id);
+        if (!song) {
+            return res.status(404).json({ success: false, message: 'Song not found' });  
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Song deleted successfully',
+            deletedSong: song
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
 module.exports = {
-    uploadSong, getSong, toggleLike, getLikedSongs
+    uploadSong, getSong, toggleLike, getLikedSongs, deleteSong
 }
 
 
