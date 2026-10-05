@@ -1,7 +1,10 @@
 import axios from 'axios'
 
+const apiBaseUrl = import.meta.env.VITE_API_URL ||
+    (import.meta.env.DEV ? 'http://localhost:3000/api' : '/api')
+
 const api = axios.create({
-    baseURL: "http://localhost:3000/api/songs",
+    baseURL: `${apiBaseUrl}/songs`,
     withCredentials: true
 })
 
@@ -11,11 +14,7 @@ export async function getSong({ mood }) {
 }
 
 export async function uploadSong(formData) {
-    const res = await api.post('/', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        }
-    })
+    const res = await api.post('/', formData)
     return res.data
 }
 

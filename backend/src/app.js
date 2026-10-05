@@ -7,10 +7,15 @@ const app = express()
 app.use(express.json()) // Middleware to parse incoming JSON payloads in HTTP requests. This allows us to easily access the data sent in the request body as a JavaScript object, which is essential for handling API requests that involve creating or updating resources with JSON data.
 app.use(cookieParser()) 
 
-const allowedOrigins = [
+const localOrigins = [
     "http://localhost:5173",
     "http://localhost:5174"
 ]
+const configuredOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || '')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean)
+const allowedOrigins = [...localOrigins, ...configuredOrigins]
 
 app.use(cors({
     origin: (origin, callback) => {

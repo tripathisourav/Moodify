@@ -79,7 +79,7 @@
 
 import { getSong, toggleLikeSong, deleteSong as deleteSongAPI } from "../services/song.api";
 import { useContext } from "react";
-import { songContext } from "../song.context";
+import { songContext } from "../song.context.js";
 
 export const useSong = () => {
     const context = useContext(songContext);
@@ -176,14 +176,25 @@ export const useSong = () => {
         setCurrentSong(songs[nextIndex]);
         const audioUrl = songs[nextIndex]?.url || songs[nextIndex]?.audioUrl || songs[nextIndex]?.src;
         if (audioRef.current && audioUrl) {
-            audioRef.current.src = audioUrl;
-            audioRef.current.volume = volume;
-            if (playing) {
-                audioRef.current.play().catch(err => console.log("Playback error:", err));
-                setPlaying(true);
-            } else {
-                // remain paused
-                setPlaying(false);
+            try {
+                const wasPlayingBefore = !!(audioRef.current && !audioRef.current.paused);
+                // ensure audio is paused before swapping src to avoid autoplay race
+                if (audioRef.current && !wasPlayingBefore) {
+                    audioRef.current.pause()
+                }
+                audioRef.current.src = audioUrl;
+                // force reload so browser state is consistent
+                audioRef.current.load()
+                audioRef.current.volume = volume;
+                if (wasPlayingBefore) {
+                    audioRef.current.play().catch(err => console.log("Playback error:", err));
+                    setPlaying(true);
+                } else {
+                    audioRef.current.pause()
+                    setPlaying(false);
+                }
+            } catch (err) {
+                console.error('playNext swap error', err);
             }
         }
     }
@@ -197,14 +208,23 @@ export const useSong = () => {
         setCurrentSong(songs[prevIndex]);
         const audioUrl = songs[prevIndex]?.url || songs[prevIndex]?.audioUrl || songs[prevIndex]?.src;
         if (audioRef.current && audioUrl) {
-            audioRef.current.src = audioUrl;
-            audioRef.current.volume = volume;
-            if (playing) {
-                audioRef.current.play().catch(err => console.log("Playback error:", err));
-                setPlaying(true);
-            } else {
-                // remain paused
-                setPlaying(false);
+            try {
+                const wasPlayingBefore = !!(audioRef.current && !audioRef.current.paused);
+                if (audioRef.current && !wasPlayingBefore) {
+                    audioRef.current.pause()
+                }
+                audioRef.current.src = audioUrl;
+                audioRef.current.load()
+                audioRef.current.volume = volume;
+                if (wasPlayingBefore) {
+                    audioRef.current.play().catch(err => console.log("Playback error:", err));
+                    setPlaying(true);
+                } else {
+                    audioRef.current.pause()
+                    setPlaying(false);
+                }
+            } catch (err) {
+                console.error('playPrev swap error', err);
             }
         }
     }
@@ -267,8 +287,23 @@ export const useSong = () => {
                         setCurrentSong(updatedSongs[nextIndex]);
                         const audioUrl = updatedSongs[nextIndex]?.url || updatedSongs[nextIndex]?.audioUrl;
                         if (audioRef.current && audioUrl) {
-                            audioRef.current.src = audioUrl;
-                            audioRef.current.play().catch(err => console.log("Playback error:", err));
+                            try {
+                                const wasPlayingBefore = !!(audioRef.current && !audioRef.current.paused);
+                                if (audioRef.current && !wasPlayingBefore) {
+                                    audioRef.current.pause()
+                                }
+                                audioRef.current.src = audioUrl;
+                                audioRef.current.load()
+                                if (wasPlayingBefore) {
+                                    audioRef.current.play().catch(err => console.log("Playback error:", err));
+                                    setPlaying(true);
+                                } else {
+                                    audioRef.current.pause()
+                                    setPlaying(false);
+                                }
+                            } catch (err) {
+                                console.error('deleteSong swap error', err);
+                            }
                         }
                     } else {
                         setCurrentSong(null);

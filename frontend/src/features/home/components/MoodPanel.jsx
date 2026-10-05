@@ -336,7 +336,7 @@
 // export default MoodPanel
 
 
-import React, { useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { detect, init } from "./utils/utils.js"
 import { useSong } from "../hooks/useSongs.js";
 
@@ -411,13 +411,21 @@ export default function MoodPanel({ onDetect = () => {} }) {
     setPhase("done")
   }
 
-  const BTN = {
-    idle:      { label: "Start Camera", action: startCamera,  disabled: false },
-    loading:   { label: "Loading…",      action: null,         disabled: true  },
-    active:    { label: "Detect Mood",   action: handleDetect, disabled: false },
-    detecting: { label: "Analyzing…",    action: null,         disabled: true  },
-    done:      { label: "Scan Again",    action: startCamera,  disabled: false },
+  const buttonConfig = {
+    idle:      { label: "Start Camera", disabled: false },
+    loading:   { label: "Loading…", disabled: true },
+    active:    { label: "Detect Mood", disabled: false },
+    detecting: { label: "Analyzing…", disabled: true },
+    done:      { label: "Scan Again", disabled: false },
   }[phase]
+
+  function handleButtonClick() {
+    if (phase === "active") {
+      handleDetect()
+    } else if (phase === "idle" || phase === "done") {
+      startCamera()
+    }
+  }
 
   const ringCls = { loading: "mp-pulse", active: "mp-pulse", detecting: "mp-fast" }[phase] ?? ""
 
@@ -515,22 +523,22 @@ export default function MoodPanel({ onDetect = () => {} }) {
         </div>
 
         <button
-          onClick={BTN.action ?? undefined}
-          disabled={BTN.disabled}
+          onClick={handleButtonClick}
+          disabled={buttonConfig.disabled}
           style={{
             width: "100%", padding: "11px 0", borderRadius: 24, border: "none",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             fontSize: 13, fontWeight: 600,
-            background: BTN.disabled ? "rgba(255,255,255,.08)" : m.c,
-            color: BTN.disabled ? "rgba(255,255,255,.3)" : m.dark ? "#111" : "#fff",
-            cursor: BTN.disabled ? "not-allowed" : "pointer",
+            background: buttonConfig.disabled ? "rgba(255,255,255,.08)" : m.c,
+            color: buttonConfig.disabled ? "rgba(255,255,255,.3)" : m.dark ? "#111" : "#fff",
+            cursor: buttonConfig.disabled ? "not-allowed" : "pointer",
             transition: "background .25s, color .25s",
           }}
-          onMouseEnter={e => { if (!BTN.disabled) e.currentTarget.style.opacity = ".8" }}
+          onMouseEnter={e => { if (!buttonConfig.disabled) e.currentTarget.style.opacity = ".8" }}
           onMouseLeave={e => { e.currentTarget.style.opacity = "1" }}
         >
           <Icon d={PATH_CAM} sz={16} fill="currentColor" />
-          {BTN.label}
+          {buttonConfig.label}
         </button>
 
         <div>

@@ -4,12 +4,16 @@ const storageService = require('../sevices/storage.services.js')
 
 async function uploadSong(req, res) {
     // console.log(req.file, '    ------');
-    console.log(req.file.buffer, '   ------');
+    // console.log(req.file.buffer, '   ------');
+
+    if (!req.file) {
+        return res.status(400).json({ message: "Please select an MP3 file" })
+    }
 
     const songBuffer = req.file.buffer
     const tags = id3.read(songBuffer)
 
-    console.log(tags, '  ------');
+    // console.log(tags, '  ------');
 
     const { mood } = req.body
 
@@ -19,10 +23,14 @@ async function uploadSong(req, res) {
     // console.log(posterBuffer, '  ------');
 
 
-    if (!posterBuffer) {
+    if (!tags.title || !tags.artist || !tags.album || !posterBuffer) {
         return res.status(400).json({
-            message: "Song must have cover image"
+            message: "MP3 must include title, artist, album, and cover image metadata"
         })
+    }
+
+    if (!["sad", "happy", "surprised"].includes(mood)) {
+        return res.status(400).json({ message: "Please select a valid mood" })
     }
 
 

@@ -121,7 +121,7 @@
 // },
 
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSong } from '../hooks/useSongs'
 import CtrlBtn from './CtrlBtn'
 import Icon from './Icon'
@@ -131,7 +131,7 @@ const Player = () => {
         I, m, currentSong, playing, togglePlay,
         playNext, playPrev, WH, pct, seekTo,
         duration, currentTime,
-        setPct, setCurrentTime, setDuration,
+        setPct, setCurrentTime, setDuration, setPlaying,
         volume, setVol,
         toggleLike, isLiked,
         audioRef,
@@ -168,7 +168,7 @@ const Player = () => {
             audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
             audio.removeEventListener('ended', handleEnded);
         };
-    }, [audioRef.current, currentSong]);
+    }, [audioRef, currentSong, playNext, setCurrentTime, setDuration, setPct]);
 
     // Keyboard shortcuts
     useEffect(() => {

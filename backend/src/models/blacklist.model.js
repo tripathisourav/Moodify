@@ -9,6 +9,8 @@ const blackListSchema = new mongoose.Schema({
     timestamps: true
 })
 
+blackListSchema.index({ createdAt: 1 }, { expireAfterSeconds: 24 * 60 * 60 })
+
 
 module.exports = mongoose.model('blacklist', blackListSchema)
 

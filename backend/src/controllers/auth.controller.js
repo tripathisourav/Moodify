@@ -2,7 +2,15 @@ const userModel = require("../models/user.model")
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const blacklistModel = require("../models/blacklist.model")
-const redis = require("../config/cache")
+
+function getAuthCookieOptions() {
+    const isProduction = process.env.NODE_ENV === 'production'
+    return {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax'
+    }
+}
 
 // async function registerUser(req, res) {
 //     const { username, email, password } = req.body
@@ -64,17 +72,16 @@ async function registerUser(req, res){
         })
     }
 
-    const user = userModel.create({
+    const user = await userModel.create({
         username,
         email,
         password: await bcrypt.hash(password, 10)
     })
 
-
     const token = jwt.sign(
         {
             id: user._id,
-            username: (await user).username
+            username: user.username
         },
         process.env.JWT_SECRET,
         {
@@ -82,15 +89,14 @@ async function registerUser(req, res){
         }
     )
 
-    res.cookie('token', token);
-    
+    res.cookie('token', token, getAuthCookieOptions())
 
     res.status(201).json({
         message: "User registered successfully",
         user: {
-            id: (await user)._id,
-            name: (await user).username,
-            email: (await user).email
+            id: user._id,
+            name: user.username,
+            email: user.email
         }
     })
 }
@@ -134,7 +140,7 @@ async function loginUser(req, res) {
         process.env.JWT_SECRET, { expiresIn: '1d' }
     )
 
-    res.cookie('token', token)
+    res.cookie('token', token, getAuthCookieOptions())
 
     res.status(201).json({
         message: 'user logged in successfully',
@@ -166,9 +172,15 @@ async function logoutUser(req, res) {
         })
     }
 
-    res.clearCookie('token')
+    try {
+        await blacklistModel.create({ token })
+    } catch (err) {
+        return res.status(503).json({
+            message: "Logout service is temporarily unavailable"
+        })
+    }
 
-    await redis.set(token, Date.now().toString(), "EX", 24 * 60 * 60)  // set the token in redis with expiry time of 1 day (24 hours) in seconds    
+    res.clearCookie('token', getAuthCookieOptions())
     // write operation in database every time user logs out to handle this many requests we use redis to store the blacklisted tokens in memory, which will make the lookup faster. we can set the expiry time for the token in Redis, so that we don't have to worry about removing the token from the blacklist after a certain period of time.
     // data stored in redis will be in the form of key-value pair, where key is the token and value is the time when the token was blacklisted. we can set the expiry time for the token in Redis, so that we don't have to worry about removing the token from the blacklist after a certain period of time. 
 

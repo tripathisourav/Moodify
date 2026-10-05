@@ -1,37 +1,30 @@
 import axios from 'axios';
 
+const apiBaseUrl = import.meta.env.VITE_API_URL ||
+    (import.meta.env.DEV ? 'http://localhost:3000/api' : '/api')
+
 const api = axios.create({
-    baseURL: 'http://localhost:3000/api/auth',
+    baseURL: `${apiBaseUrl}/auth`,
     withCredentials: true
 })
 
 
 export async function login(identifier, password) {
-    try {
-        const res = await api.post('/login', {
-            identifier,
-            password
-        })
-        console.log(res);
-
-        return res.data
-    } catch (err) {
-        throw err
-    }
+    const res = await api.post('/login', {
+        identifier,
+        password
+    })
+    return res.data
 }
 
 
 export async function register(username, email, password) {
-    try {
-        const res = await api.post('/register', {
-            username,
-            email,
-            password
-        })
-        return res.data
-    } catch (err) {
-        throw err
-    }
+    const res = await api.post('/register', {
+        username,
+        email,
+        password
+    })
+    return res.data
 }
 
 

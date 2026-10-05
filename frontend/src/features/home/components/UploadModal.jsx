@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import Icon from './Icon';
 
 const UploadModal = ({ isOpen, onClose, currentMood, MOODS, m, I, onUploadSuccess }) => {
+    const apiBaseUrl = import.meta.env.VITE_API_URL ||
+        (import.meta.env.DEV ? 'http://localhost:3000/api' : '/api')
     const [selectedFile, setSelectedFile] = useState(null);
     const [selectedMood, setSelectedMood] = useState(currentMood === 'neutral' ? 'happy' : currentMood);
     const [uploading, setUploading] = useState(false);
@@ -10,13 +12,6 @@ const UploadModal = ({ isOpen, onClose, currentMood, MOODS, m, I, onUploadSucces
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [dragActive, setDragActive] = useState(false);
-
-    // Update selectedMood when currentMood changes (when switching pages)
-    useEffect(() => {
-        if (isOpen) {
-            setSelectedMood(currentMood === 'neutral' ? 'happy' : currentMood);
-        }
-    }, [isOpen, currentMood]);
 
     const handleFileChange = (e) => {
         const file = e.target.files?.[0];
@@ -56,8 +51,8 @@ const UploadModal = ({ isOpen, onClose, currentMood, MOODS, m, I, onUploadSucces
             formData.append('song', selectedFile);
             formData.append('mood', selectedMood);
 
-            const res = await axios.post('http://localhost:3000/api/songs/', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            const res = await axios.post(`${apiBaseUrl}/songs/`, formData, {
+                withCredentials: true,
                 onUploadProgress: (e) => {
                     if (e.total) {
                         const pct = Math.round((e.loaded / e.total) * 100);

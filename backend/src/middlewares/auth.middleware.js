@@ -1,6 +1,5 @@
 const blacklistModel = require('../models/blacklist.model')
 const jwt = require('jsonwebtoken')
-const redis = require('../config/cache')
 
 async function authUser(req, res, next){
     const token = req.cookies.token
@@ -11,7 +10,14 @@ async function authUser(req, res, next){
         })
     }
 
-    const isTokenBlacklisted = await redis.get(token)  //  read operation in database every time middleware is used to handle this many requests we use redis
+    let isTokenBlacklisted
+    try {
+        isTokenBlacklisted = await blacklistModel.exists({ token })
+    } catch (err) {
+        return res.status(503).json({
+            message: "Authentication service is temporarily unavailable"
+        })
+    }
 
     if(isTokenBlacklisted){
         return res.status(401).json({

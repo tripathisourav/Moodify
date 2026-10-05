@@ -93,9 +93,8 @@
 // export default SongProvider;
 
 
-import { createContext, useState, useRef } from "react";
-
-export const songContext = createContext();
+import { useState, useRef } from "react";
+import { songContext } from './song.context.js'
 
 const SongProvider = ({ children }) => {
     const MOODS = {

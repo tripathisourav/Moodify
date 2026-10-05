@@ -1,5 +1,3 @@
-import React from 'react'
-
 const FormGroup = ({type, name, placeholder, setUsername}) => {
     return (
         <input type={type} name={name}

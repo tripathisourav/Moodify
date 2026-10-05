@@ -82,15 +82,17 @@ const Header = () => {
             </div>
 
             {/* Upload Modal */}
-            <UploadModal
-                isOpen={isUploadOpen}
-                onClose={() => setIsUploadOpen(false)}
-                currentMood={mood}
-                MOODS={MOODS}
-                m={m}
-                I={I}
-                onUploadSuccess={() => handleGetSong({ mood })}
-            />
+            {isUploadOpen && (
+                <UploadModal
+                    isOpen={isUploadOpen}
+                    onClose={() => setIsUploadOpen(false)}
+                    currentMood={mood}
+                    MOODS={MOODS}
+                    m={m}
+                    I={I}
+                    onUploadSuccess={() => handleGetSong({ mood })}
+                />
+            )}
         </>
     )
 }

@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { Link, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
+import AuthCard from '../components/AuthCard'
 import '../styles/form.scss'
 
 const Register = () => {
@@ -8,6 +9,7 @@ const Register = () => {
     const [username, setUsername] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [error, setError] = useState("")
 
     const { handleRegister, loading } = useAuth()
     const navigate = useNavigate()
@@ -18,38 +20,61 @@ const Register = () => {
 
     async function handleSubmit(e) {
         e.preventDefault()
+        setError("")
 
-        const res = await handleRegister(username, email, password)
-        console.log(res)
-        navigate("/")
+        try {
+            await handleRegister(username, email, password)
+            navigate("/")
+        } catch (err) {
+            setError(err.response?.data?.message || "Registration failed. Please try again.")
+        }
     }
 
     return (
-        <main>
-            <div className="form-container">
-                <h1>Register</h1>
-                <form onSubmit={handleSubmit} >
+        <AuthCard
+            title="Create your Moodify account"
+            footerText="Already have an account?"
+            footerLinkText="Login"
+            footerLinkTo="/login"
+        >
+            <form onSubmit={handleSubmit} className="auth-form">
+                <label>
+                    Username
                     <input
-                        onInput={(e) => { setUsername(e.target.value) }}
                         type="text"
                         name='username'
-                        placeholder='Enter username' />
+                        value={username}
+                        onChange={(e) => { setUsername(e.target.value) }}
+                        placeholder='Enter username'
+                        autoComplete='username'
+                    />
+                </label>
+                <label>
+                    Email
                     <input
-                        onInput={(e) => { setEmail(e.target.value) }}
-                        type="text"
+                        type="email"
                         name='email'
-                        placeholder='Enter email' />
+                        value={email}
+                        onChange={(e) => { setEmail(e.target.value) }}
+                        placeholder='Enter email'
+                        autoComplete='email'
+                    />
+                </label>
+                <label>
+                    Password
                     <input
-                        onInput={(e) => { setPassword(e.target.value) }}
                         type="password"
                         name='password'
-                        placeholder='Enter password' />
-                    <button className='button primary-button' type='submit'>Register</button>
-                </form>
-
-                <p>Already have an account? <Link className='toggleAuthForm' to="/login">Login</Link></p>
-            </div>
-        </main>
+                        value={password}
+                        onChange={(e) => { setPassword(e.target.value) }}
+                        placeholder='Enter password'
+                        autoComplete='new-password'
+                    />
+                </label>
+                {error && <p role="alert">{error}</p>}
+                <button className='button primary-button' type='submit'>Register</button>
+            </form>
+        </AuthCard>
     )
 }
 

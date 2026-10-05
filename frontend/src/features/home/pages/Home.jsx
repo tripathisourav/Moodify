@@ -126,7 +126,7 @@
 // export default Home
 
 
-import React, { useEffect } from 'react'
+import { useEffect, useEffectEvent } from 'react'
 import Header from '../components/Header'
 import Tracks from '../components/Tracks'
 import Player from '../components/Player'
@@ -135,9 +135,10 @@ import { useSong } from '../hooks/useSongs'
 
 const Home = () => {
     const { mood, handleGetSong } = useSong();
+    const loadSongs = useEffectEvent(() => handleGetSong({ mood }))
 
     useEffect(() => {
-        handleGetSong({ mood });
+        loadSongs()
     }, [mood]);
 
     return (
